@@ -1,5 +1,6 @@
 
 # Fashion Recommendation System
+<img width="1901" height="813" alt="image" src="https://github.com/user-attachments/assets/d84be931-6616-4c23-bab5-180f0e3dd588" />
 
 사용자 프롬프트 기반 패션 아웃핏 추천 시스템입니다. MCP 서버와 FastAPI 서버를 활용하여 아웃핏 추천, 검증, 콜라주 생성 등 전체 파이프라인을 제공합니다.
 
@@ -76,13 +77,17 @@ curl -X POST "http://127.0.0.1:8002/recommend" \
 * **MCP Tool Server 구조**
 
   * 핵심 로직을 Tool 단위로 분리
-  * Tool 단위 분리 이유:
+Client
+  ↓ HTTP
+FastAPI Server
+  └─ MCP 연결 성공 → MCP Tool Server 호출
+                       ├─ analyze_prompt
+                       ├─ recommend_outfits
+                       ├─ validate_outfit
+                       └─ create_outfit_collage
 
-    1. 단일 책임 원칙(SRP) 준수
-    2. 재사용성 확보
-    3. 유연한 조합 가능
-    4. 에러 격리 및 디버깅 용이
-    5. 확장성 확보
+
+
 * **FastAPI 서버**
 
   * MCP 모드와 Direct 모드를 모두 지원
