@@ -2,7 +2,8 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from typing import Optional
+from typing import Any, Optional
+from datetime import datetime 
 import asyncio
 import json
 import os
@@ -27,6 +28,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# ==================== Pydantic 모델 정의 ====================
 class RecommendationRequest(BaseModel):
     prompt: str
     gender: str
@@ -34,6 +36,14 @@ class RecommendationRequest(BaseModel):
     personalColor: Optional[str] = None
     season: Optional[str] = None
     user_id: Optional[str] = None
+
+class FeedbackRequest(BaseModel):
+    user_id: Optional[str] = None
+    outfit_id: str
+    feedback_type: str
+    outfit_items: dict[str, Any]
+    prompt: str
+    metadata: Optional[dict] = None
 
 # ==================== 전역 상태 ====================
 mcp_client_session = None
@@ -56,7 +66,7 @@ def log_status(message: str, level: str = "info"):
         "message": message
     }
     server_status["startup_logs"].append(log_entry)
-    print(f"[{level.upper()}] {message}", flush=True)
+    print(f"[{level.upper()}] {message}", file=sys.stderr, flush=True)
 
 # ==================== MCP 클라이언트 ====================
 async def connect_mcp_client():
@@ -87,7 +97,6 @@ async def connect_mcp_client():
         log_status("🚀 MCP 서버 초기화 중...")
         await mcp_client_session.initialize()
         
-        # 사용 가능한 도구 목록 가져오기
         tools_list = await mcp_client_session.list_tools()
         server_status["mcp_tools"] = [
             {"name": tool.name, "description": tool.description}
@@ -126,6 +135,11 @@ async def call_mcp_tool(tool_name: str, arguments: dict):
     
     try:
         data = json.loads(text)
+        
+        if "error" in data:
+            log_status(f"❌ MCP Tool '{tool_name}' 에러: {data['error']}", "error")
+            return None
+        
         log_status(f"✅ MCP Tool '{tool_name}' 응답 성공", "success")
         return data
     except json.JSONDecodeError as e:
@@ -137,11 +151,6 @@ async def call_mcp_tool(tool_name: str, arguments: dict):
 async def startup_event():
     log_status("🚀 FastAPI 서버 시작...")
     log_status("📦 데이터 디렉토리 확인 중...")
-    
-    if os.path.exists(IMAGE_DIR):
-        log_status(f"✅ 이미지 디렉토리 확인: {IMAGE_DIR}", "success")
-    else:
-        log_status(f"⚠️ 이미지 디렉토리 없음: {IMAGE_DIR}", "warning")
     
     await connect_mcp_client()
     
@@ -174,7 +183,7 @@ async def health_check():
         "status": "healthy",
         "mcp_status": "connected" if server_status["mcp_connected"] else "disconnected",
         "mcp_tools": server_status["mcp_tools"],
-        "startup_logs": server_status["startup_logs"][-10:],  # 최근 10개 로그
+        "startup_logs": server_status["startup_logs"][-10:],
         "last_error": server_status["last_error"]
     }
 
@@ -189,59 +198,191 @@ async def get_status():
         "image_dir_exists": os.path.exists(IMAGE_DIR),
         "total_logs": len(server_status["startup_logs"])
     }
+def json_safe(obj):
+    try:
+        json.dumps(obj)
+        return obj
+    except TypeError:
+        return str(obj)
 
-def search_image_url(product_name: str):
-    query = product_name.replace(" ", "+")
-    return f"https://www.google.com/search?tbm=isch&q={query}"
+@app.post("/feedback")
+async def save_feedback(feedback: FeedbackRequest):
+    """사용자 피드백 저장 (user_id 없으면 저장 안함)"""
+    try:
+        log_status("📥 피드백 요청 수신", "info")
 
+        # 1. 익명 사용자 처리
+        if not feedback.user_id or feedback.user_id.strip() == "":
+            log_status("💡 익명 사용자 - 피드백 저장 스킵", "info")
+            return {
+                "status": "skipped",
+                "message": "익명 사용자는 피드백이 저장되지 않습니다",
+                "is_anonymous": True
+            }
+
+        user_id = feedback.user_id.strip()
+
+        # 2. feedback_type 검증
+        if feedback.feedback_type not in ("like", "dislike"):
+            log_status(f"❌ 잘못된 feedback_type: {feedback.feedback_type}", "error")
+            raise HTTPException(
+                status_code=400,
+                detail=f"Invalid feedback_type: {feedback.feedback_type}"
+            )
+
+        # 3. 저장 데이터 구성
+        feedback_data = {
+            "user_id": user_id,
+            "outfit_id": feedback.outfit_id,
+            "feedback_type": feedback.feedback_type,
+            "outfit_items": json_safe(feedback.outfit_items),
+            "prompt": feedback.prompt,
+            "timestamp": datetime.now().isoformat(),
+            "metadata": json_safe(feedback.metadata or {})
+        }
+
+        # 4. 경로 준비
+        user_json_dir = os.path.join(BASE_DIR, "data_sources", "user_json")
+        os.makedirs(user_json_dir, exist_ok=True)
+        user_json_path = os.path.join(user_json_dir, f"{user_id}.json")
+
+        # 5. 기본 구조
+        default_structure = {
+            "user_id": user_id,
+            "created_at": datetime.now().isoformat(),
+            "preferences": {
+                "liked_items": [],
+                "disliked_items": [],
+                "preferred_styles": [],
+                "disliked_colors": []
+            },
+            "history": []
+        }
+
+        # 6. 기존 파일 로드
+        if os.path.exists(user_json_path):
+            try:
+                with open(user_json_path, "r", encoding="utf-8") as f:
+                    user_data = json.load(f)
+            except json.JSONDecodeError as e:
+                log_status(
+                    f"❌ JSON 파싱 실패 ({user_json_path}): line {e.lineno}, col {e.colno}",
+                    "error"
+                )
+                user_data = default_structure.copy()
+            except Exception as e:
+                log_status(
+                    f"❌ 사용자 파일 로드 실패 ({user_json_path}): {str(e)}",
+                    "error"
+                )
+                user_data = default_structure.copy()
+        else:
+            user_data = default_structure.copy()
+
+        # 7. 구조 보정
+        user_data.setdefault("preferences", default_structure["preferences"].copy())
+        user_data["preferences"].setdefault("liked_items", [])
+        user_data["preferences"].setdefault("disliked_items", [])
+        user_data["preferences"].setdefault("preferred_styles", [])
+        user_data["preferences"].setdefault("disliked_colors", [])
+        user_data.setdefault("history", [])
+
+        # 8. 피드백 반영
+        if feedback.feedback_type == "like":
+            user_data["preferences"]["liked_items"].append(feedback_data)
+        else:
+            user_data["preferences"]["disliked_items"].append(feedback_data)
+
+        user_data["history"].append(feedback_data)
+
+        # 9. 파일 저장
+        try:
+            with open(user_json_path, "w", encoding="utf-8") as f:
+                json.dump(user_data, f, ensure_ascii=False, indent=2)
+        except Exception as e:
+            log_status(
+                f"❌ 사용자 파일 저장 실패 ({user_json_path}): {str(e)}",
+                "error"
+            )
+            raise HTTPException(status_code=500, detail="파일 저장 실패")
+
+        log_status(
+            f"✅ 피드백 저장 완료 | user_id={user_id} | type={feedback.feedback_type}",
+            "success"
+        )
+
+        return {
+            "status": "success",
+            "message": "피드백이 저장되었습니다",
+            "user_id": user_id,
+            "is_anonymous": False,
+            "feedback_type": feedback.feedback_type,
+            "stats": {
+                "total_likes": len(user_data["preferences"]["liked_items"]),
+                "total_dislikes": len(user_data["preferences"]["disliked_items"]),
+                "total_history": len(user_data["history"])
+            }
+        }
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        log_status("💥 피드백 저장 중 치명적 오류 발생", "error")
+        log_status(str(e), "error")
+        raise HTTPException(status_code=500, detail="서버 내부 오류")
+
+        
 @app.post("/recommend")
 async def recommend_outfit(request: RecommendationRequest):
     """아웃핏 추천 API"""
-    try:
-        # MCP 모드 시도
-        if server_status["mcp_connected"] and mcp_client_session:
-            log_status(f"🎨 MCP 모드로 추천 시작: {request.prompt[:50]}...")
-            
-            result = await call_mcp_tool(
-                "full_recommendation_pipeline",
-                {
-                    "prompt": request.prompt or "",
-                    "gender": request.gender or "",
-                    "age": str(request.age) if request.age is not None else "",
-                    "personal_color": request.personalColor or "",
-                    "season": request.season or "",
-                    "user_id": str(request.user_id) if request.user_id is not None else ""
-                }
-            )
+    if server_status["mcp_connected"] and mcp_client_session:
+        log_status(f"🎨 MCP 모드로 추천 시작: {request.prompt[:50]}...")
+        
+        result = await call_mcp_tool(
+            "full_recommendation_pipeline",
+            {
+                "prompt": request.prompt or "",
+                "gender": request.gender or "",
+                "age": str(request.age) if request.age is not None else "",
+                "personal_color": request.personalColor or "",
+                "season": request.season or "",
+                "user_id": str(request.user_id) if request.user_id is not None else ""
+            }
+        )
 
-            if result:
-                outfits = result.get("outfits", [])
-                processed_outfits = await process_outfits(outfits, request)
-                
-                response = {
-                    'prompt': request.prompt,
-                    'outfits': processed_outfits,
-                    'mode': 'mcp',
-                    'metadata': {
-                        'total_outfits': len(processed_outfits),
-                        'gender': request.gender or "",
-                        'age': request.age or "",
-                        'personalColor': request.personalColor or "",
-                        'user_id': request.user_id or "",
-                        'personalized': request.user_id is not None
+        if result:
+            outfits = result.get("outfits", [])
+            processed_outfits = []
+            for outfit in outfits:
+                processed_outfits.append({
+                    'outfit_id': outfit.get('outfit_id'),
+                    'items': outfit.get('items', {}),
+                    'categories': list(outfit.get('items', {}).keys()),
+                    'collage': outfit.get('collage'),
+                    'scores': {
+                        'validation': outfit.get('validation', {}).get('validation_score', 0),
+                        'validation_details': outfit.get('validation', {}).get('details', {}),
+                        'accepted': outfit.get('validation', {}).get('accepted', False)
                     }
+                })
+            
+            response = {
+                'prompt': request.prompt,
+                'outfits': processed_outfits,
+                'mode': 'mcp',
+                'metadata': {
+                    'total_outfits': len(processed_outfits),
+                    'gender': request.gender or "",
+                    'age': request.age or "",
+                    'personalColor': request.personalColor or "",
+                    'user_id': request.user_id or "",
+                    'personalized': request.user_id is not None
                 }
-                log_status(f"✅ MCP 추천 완료: {len(processed_outfits)}개 코디", "success")
-                return response
+            }
+            log_status(f"✅ MCP 추천 완료: {len(processed_outfits)}개 코디", "success")
+            return response
+        
 
-        # Direct 모드 fallback
-        log_status("🔄 Direct 모드로 전환...", "warning")
-        return await recommend_direct(request)
-
-    except Exception as e:
-        log_status(f"❌ 추천 실패: {str(e)}", "error")
-        traceback.print_exc()
-        raise HTTPException(status_code=500, detail=str(e))
 
 async def process_outfits(outfits, request):
     """아웃핏 처리 공통 로직"""
@@ -267,18 +408,15 @@ async def process_outfits(outfits, request):
                     'color': item_data['color'],
                     'image': image_to_base64(original_img),
                     'image_transparent': image_to_base64(transparent_img),
-                    'image_url': search_image_url(item_data['name'])
                 }
                 pil_items[cat] = transparent_img
 
-            # Collage 생성
             try:
                 collage = create_outfit_collage_v3(pil_items)
                 collage_base64 = f"data:image/png;base64,{image_to_base64(collage)}"
             except Exception:
                 collage_base64 = None
 
-            # Validation
             outfit_item_ids = [item['id'] for item in outfit['items'].values()]
             try:
                 val_score, accepted, val_details = validator.evaluate(
@@ -312,57 +450,6 @@ async def process_outfits(outfits, request):
 
     return processed_outfits
 
-async def recommend_direct(request: RecommendationRequest):
-    """Direct 모드 추천"""
-    from app_globals.objects import recommender
-    from app_globals.utils import detect_and_translate
-    
-    log_status("🎨 Direct 모드 추천 시작...")
-    
-    # 번역 및 프롬프트 강화
-    detected_lang, translated_prompt = detect_and_translate(request.prompt)
-    enriched_prompt = translated_prompt
-    
-    if request.age:
-        enriched_prompt += f" for {request.age} year old"
-    if request.gender and request.gender != "All":
-        enriched_prompt += f" {request.gender.lower()}."
-    if request.personalColor:
-        enriched_prompt += f" Personal color is {request.personalColor}."
-    if request.season:
-        enriched_prompt += f" Suitable for {request.season} season."
-    
-    # PPO 추천 실행
-    outfits = recommender.recommend_outfits(
-        prompt=enriched_prompt,
-        gender=request.gender,
-        age=request.age,
-        personal_color=request.personalColor,
-        num_outfits=3
-    )
-    
-    # 아웃핏 처리
-    processed_outfits = await process_outfits(outfits, request)
-    
-    response = {
-        'prompt': str(request.prompt),
-        'translatedPrompt': str(translated_prompt) if detected_lang != 'en' else None,
-        'enrichedPrompt': str(enriched_prompt),
-        'detectedLanguage': str(detected_lang),
-        'outfits': processed_outfits,
-        'mode': 'direct',
-        'metadata': {
-            'total_outfits': len(processed_outfits),
-            'gender': request.gender,
-            'age': request.age,
-            'personalColor': request.personalColor,
-            'user_id': request.user_id,
-            'personalized': request.user_id is not None
-        }
-    }
-    
-    log_status(f"✅ Direct 추천 완료: {len(processed_outfits)}개 코디", "success")
-    return response
 
 
 if __name__ == "__main__":

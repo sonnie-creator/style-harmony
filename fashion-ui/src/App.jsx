@@ -82,17 +82,22 @@ const OutfitRecommendationUI = () => {
   };
 
   return (
-    <div className="min-h-screen p-6 md:p-10" style={{
+    <div style={{
+      minHeight: '100vh',
+      padding: '2.5rem 1.5rem',
       background: 'linear-gradient(135deg, #faf5ff 0%, #f3e8ff 50%, #e9d5ff 100%)',
       backgroundAttachment: 'fixed',
       fontFamily: "'Pretendard', -apple-system, sans-serif"
     }}>
       
-      <div className="max-w-full mx-auto px-4">
+      <div style={{ maxWidth: '100%', margin: '0 auto', padding: '0 1rem' }}>
         
-        {/* Header - 여백 넉넉하게 */}
-        <div className="text-center mb-16 animate-fade-in">
-          <h1 className="text-6xl md:text-7xl font-bold mb-6" style={{
+        {/* Header */}
+        <div style={{ textAlign: 'center', marginBottom: '4rem' }}>
+          <h1 style={{
+            fontSize: 'clamp(2.5rem, 5vw, 4rem)',
+            fontWeight: 'bold',
+            marginBottom: '1.5rem',
             background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
             WebkitBackgroundClip: 'text',
             WebkitTextFillColor: 'transparent',
@@ -103,7 +108,11 @@ const OutfitRecommendationUI = () => {
           }}>
             ✨ AI 패션 스타일리스트
           </h1>
-          <p className="text-purple-700 text-xl font-semibold mt-4" style={{
+          <p style={{
+            color: '#7e22ce',
+            fontSize: '1.25rem',
+            fontWeight: '600',
+            marginTop: '1rem',
             letterSpacing: '-0.02em',
             lineHeight: '1.8'
           }}>
@@ -111,348 +120,506 @@ const OutfitRecommendationUI = () => {
           </p>
         </div>
 
-        {/* Server Status Banner - 크고 여백 넉넉하게 */}
+        {/* Server Status Banner */}
         {!statusLoading && serverStatus && (
-          <div className={`mb-16 p-8 rounded-3xl backdrop-blur-md border-3 transition-all duration-300 max-w-5xl mx-auto ${
-            serverStatus.mcp_connected 
-              ? 'bg-white/90 border-green-300 shadow-xl' 
-              : 'bg-white/90 border-yellow-300 shadow-xl'
-          }`}>
-            <div className="flex flex-col items-center gap-6">
-              <div className="flex items-center gap-4">
+          <div style={{
+            marginBottom: '4rem',
+            padding: '2rem',
+            borderRadius: '1.5rem',
+            backdropFilter: 'blur(12px)',
+            border: serverStatus.mcp_connected ? '3px solid #86efac' : '3px solid #fde047',
+            background: serverStatus.mcp_connected ? 'rgba(255, 255, 255, 0.9)' : 'rgba(255, 255, 255, 0.9)',
+            boxShadow: '0 10px 40px rgba(168, 85, 247, 0.15)',
+            maxWidth: '1200px',
+            margin: '0 auto 4rem auto'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '1.5rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
                 {serverStatus.mcp_connected ? (
                   <>
-                    <CheckCircle className="w-9 h-9 text-green-600 animate-pulse" />
-                    <div className="text-center">
-                      <div className="font-bold text-green-900 text-2xl mb-2" style={{ letterSpacing: '-0.02em' }}>
+                    <CheckCircle style={{ width: '2.25rem', height: '2.25rem', color: '#16a34a' }} />
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontWeight: 'bold', color: '#166534', fontSize: '1.5rem', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
                         🚀 MCP 서버 연결됨
                       </div>
-                      <div className="text-base text-green-700 font-semibold">
+                      <div style={{ fontSize: '1rem', color: '#15803d', fontWeight: '600' }}>
                         {serverStatus.mcp_tools?.length || 0}개 도구 사용 가능
                       </div>
                     </div>
                   </>
                 ) : (
                   <>
-                    <AlertCircle className="w-9 h-9 text-yellow-600 animate-pulse" />
-                    <div className="text-center">
-                      <div className="font-bold text-yellow-900 text-2xl mb-2" style={{ letterSpacing: '-0.02em' }}>
+                    <AlertCircle style={{ width: '2.25rem', height: '2.25rem', color: '#ca8a04' }} />
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontWeight: 'bold', color: '#854d0e', fontSize: '1.5rem', marginBottom: '0.5rem', letterSpacing: '-0.02em' }}>
                         ⚡ Direct 모드로 실행 중
                       </div>
-                      <div className="text-base text-yellow-700 font-semibold">
+                      <div style={{ fontSize: '1rem', color: '#a16207', fontWeight: '600' }}>
                         {serverStatus.last_error || 'MCP 서버 미연결'}
                       </div>
                     </div>
                   </>
                 )}
               </div>
-              
-              {serverStatus.startup_logs && serverStatus.startup_logs.length > 0 && (
-                <details className="text-sm w-full">
-                  <summary className="cursor-pointer text-purple-700 hover:text-purple-900 font-bold text-center text-lg">
-                    📋 로그 보기
-                  </summary>
-                  <div className="mt-4 p-5 bg-white/70 rounded-2xl border-2 border-purple-200 max-h-40 overflow-y-auto">
-                    {serverStatus.startup_logs.slice(-5).map((log, idx) => (
-                      <div key={idx} className={`text-sm mb-3 text-center font-semibold ${
-                        log.level === 'error' ? 'text-red-600' :
-                        log.level === 'warning' ? 'text-yellow-600' :
-                        log.level === 'success' ? 'text-green-600' :
-                        'text-purple-600'
-                      }`} style={{ lineHeight: '1.6' }}>
-                        {log.message}
-                      </div>
-                    ))}
-                  </div>
-                </details>
-              )}
             </div>
           </div>
         )}
 
-        {/* Toast - 크고 둥글게 */}
+        {/* Toast */}
         {toast && (
-          <div className="fixed top-8 left-1/2 transform -translate-x-1/2 z-50 animate-fade-in">
-            <div className="px-10 py-5 rounded-2xl shadow-2xl font-bold text-center text-lg" style={{
-              background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
-              color: 'white',
-              letterSpacing: '-0.02em'
-            }}>
-              {toast}
-            </div>
+          <div style={{
+            position: 'fixed',
+            top: '2rem',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 9999,
+            padding: '1.25rem 2.5rem',
+            borderRadius: '1.25rem',
+            boxShadow: '0 10px 35px rgba(147, 51, 234, 0.45)',
+            fontWeight: 'bold',
+            fontSize: '1.125rem',
+            textAlign: 'center',
+            background: 'linear-gradient(135deg, #9333ea 0%, #c084fc 100%)',
+            color: 'white',
+            letterSpacing: '-0.02em'
+          }}>
+            {toast}
           </div>
         )}
 
-        {/* Main Container - 여백 넉넉하게 */}
-{/* Main Container - 여백 넉넉하게 */}
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-  
-  {/* Left Panel - 크고 여백 넉넉하게 */}
-  <div className="flex flex-col gap-12">
-    
-    {/* User Info Card */}
-    <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 border-3 border-purple-200 hover:shadow-2xl transition-all duration-300">
-      <div className="flex items-center justify-center gap-5 mb-10">
-        <User className="w-7 h-7 text-purple-600" />
-        <h2 className="text-2xl font-bold text-purple-900" style={{ letterSpacing: '-0.02em' }}>
-          사용자 정보
-        </h2>
-      </div>
-      
-      <input
-        type="text"
-        value={userId}
-        placeholder="사용자 ID (선택사항)"
-        onChange={(e) => setUserId(e.target.value)}
-        className="w-full px-6 py-4 border-3 border-purple-200 rounded-2xl 
-                   focus:ring-4 focus:ring-purple-300 focus:border-purple-400 
-                   transition-all text-center font-semibold text-lg"
-        style={{ letterSpacing: '-0.02em' }}
-      />
-    </div>
+        {/* Main Grid */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
+          gap: '3rem',
+          maxWidth: '100%'
+        }}>
+          
+          {/* Left Column */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+            
+            {/* User Info Card */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '1.5rem',
+              boxShadow: '0 10px 40px rgba(168, 85, 247, 0.15)',
+              padding: '2rem',
+              border: '3px solid rgba(192, 132, 252, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.25rem', marginBottom: '2.5rem' }}>
+                <User style={{ width: '1.75rem', height: '1.75rem', color: '#9333ea' }} />
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4c1d95', letterSpacing: '-0.02em', margin: 0 }}>
+                  사용자 정보
+                </h2>
+              </div>
+              
+              <input
+                type="text"
+                value={userId}
+                placeholder="사용자 ID (선택사항)"
+                onChange={(e) => setUserId(e.target.value)}
+                style={{
+                  width: '100%',
+                  padding: '1rem 1.5rem',
+                  border: '3px solid #e9d5ff',
+                  borderRadius: '1rem',
+                  fontSize: '1.125rem',
+                  fontWeight: '600',
+                  textAlign: 'center',
+                  letterSpacing: '-0.02em',
+                  transition: 'all 0.3s ease'
+                }}
+              />
+            </div>
 
-    {/* Style Input Card */}
-    <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 border-3 border-purple-200 hover:shadow-2xl transition-all duration-300">
-      <div className="flex items-center justify-center gap-5 mb-10">
-        <Sparkles className="w-7 h-7 text-yellow-500 animate-pulse" />
-        <h2 className="text-2xl font-bold text-purple-900" style={{ letterSpacing: '-0.02em' }}>
-          스타일 입력
-        </h2>
-      </div>
+            {/* Style Input Card */}
+            <div style={{
+              background: 'rgba(255, 255, 255, 0.95)',
+              backdropFilter: 'blur(12px)',
+              borderRadius: '1.5rem',
+              boxShadow: '0 10px 40px rgba(168, 85, 247, 0.15)',
+              padding: '2rem',
+              border: '3px solid rgba(192, 132, 252, 0.2)'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '1.25rem', marginBottom: '2.5rem' }}>
+                <Sparkles style={{ width: '1.75rem', height: '1.75rem', color: '#eab308' }} />
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 'bold', color: '#4c1d95', letterSpacing: '-0.02em', margin: 0 }}>
+                  스타일 입력
+                </h2>
+              </div>
 
-      {/* ⬇⬇⬇ 바로 여기: 모든 입력 요소를 "한 부모 - flex flex-col gap"으로 묶음 */}
-      <div className="flex flex-col gap-12">
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem' }}>
+                
+                <textarea
+                  value={prompt}
+                  placeholder="원하는 스타일을 자유롭게 입력하세요&#10;&#10;예: 캐주얼한 데이트 룩, 비즈니스 미팅용 정장..."
+                  onChange={(e) => setPrompt(e.target.value)}
+                  rows={5}
+                  style={{
+                    width: '100%',
+                    padding: '1.25rem 1.5rem',
+                    border: '3px solid #e9d5ff',
+                    borderRadius: '1rem',
+                    fontSize: '1rem',
+                    fontWeight: '500',
+                    resize: 'vertical',
+                    textAlign: 'left',
+                    lineHeight: '1.8',
+                    letterSpacing: '-0.02em'
+                  }}
+                />
 
-        {/* 프롬프트 */}
-        <textarea
-          value={prompt}
-          placeholder="원하는 스타일을 자유롭게 입력하세요&#10;&#10;예: 캐주얼한 데이트 룩, 비즈니스 미팅용 정장..."
-          onChange={(e) => setPrompt(e.target.value)}
-          rows={5}
-          className="w-full px-6 py-5 border-3 border-purple-200 rounded-2xl 
-                     focus:ring-4 focus:ring-purple-300 focus:border-purple-400 
-                     resize-none transition-all font-medium text-lg"
-          style={{ textAlign: 'left', lineHeight: '1.8', letterSpacing: '-0.02em' }}
-        />
+                <div>
+                  <label style={{ display: 'block', textAlign: 'center', fontSize: '1.125rem', fontWeight: 'bold', color: '#4c1d95', marginBottom: '1.25rem', letterSpacing: '-0.02em' }}>
+                    성별
+                  </label>
+                  <select
+                    value={gender}
+                    onChange={(e) => setGender(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '1rem 1.5rem',
+                      border: '3px solid #e9d5ff',
+                      borderRadius: '1rem',
+                      fontSize: '1.125rem',
+                      fontWeight: '600',
+                      textAlign: 'center',
+                      letterSpacing: '-0.02em'
+                    }}
+                  >
+                    <option value="All">전체</option>
+                    <option value="Men">남성</option>
+                    <option value="Women">여성</option>
+                  </select>
+                </div>
 
-        {/* 성별 */}
-        <div>
-          <label className="block text-center text-lg font-bold text-purple-900 mb-5" style={{ letterSpacing: '-0.02em' }}>
-            성별
-          </label>
-          <select
-            value={gender}
-            onChange={(e) => setGender(e.target.value)}
-            className="w-full px-6 py-4 border-3 border-purple-200 rounded-2xl 
-                       focus:ring-4 focus:ring-purple-300 focus:border-purple-400 
-                       transition-all text-center font-semibold text-lg"
-            style={{ letterSpacing: '-0.02em' }}
-          >
-            <option value="All">전체</option>
-            <option value="Men">남성</option>
-            <option value="Women">여성</option>
-          </select>
-        </div>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '2rem' }}>
+                  <div>
+                    <label style={{ display: 'block', textAlign: 'center', fontSize: '1.125rem', fontWeight: 'bold', color: '#4c1d95', marginBottom: '1.25rem', letterSpacing: '-0.02em' }}>
+                      나이
+                    </label>
+                    <input
+                      type="text"
+                      value={age}
+                      placeholder="예: 25"
+                      onChange={(e) => setAge(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '1rem 1.5rem',
+                        border: '3px solid #e9d5ff',
+                        borderRadius: '1rem',
+                        fontSize: '1.125rem',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        letterSpacing: '-0.02em'
+                      }}
+                    />
+                  </div>
 
-        {/* 나이 + 계절 */}
-        <div className="grid grid-cols-2 gap-8">
-          <div>
-            <label className="block text-center text-lg font-bold text-purple-900 mb-5" style={{ letterSpacing: '-0.02em' }}>
-              나이
-            </label>
-            <input
-              type="text"
-              value={age}
-              placeholder="예: 25"
-              onChange={(e) => setAge(e.target.value)}
-              className="w-full px-6 py-4 border-3 border-purple-200 rounded-2xl 
-                         focus:ring-4 focus:ring-purple-300 focus:border-purple-400 
-                         transition-all text-center font-semibold text-lg"
-              style={{ letterSpacing: '-0.02em' }}
-            />
+                  <div>
+                    <label style={{ display: 'block', textAlign: 'center', fontSize: '1.125rem', fontWeight: 'bold', color: '#4c1d95', marginBottom: '1.25rem', letterSpacing: '-0.02em' }}>
+                      계절
+                    </label>
+                    <select
+                      value={season}
+                      onChange={(e) => setSeason(e.target.value)}
+                      style={{
+                        width: '100%',
+                        padding: '1rem 1.5rem',
+                        border: '3px solid #e9d5ff',
+                        borderRadius: '1rem',
+                        fontSize: '1.125rem',
+                        fontWeight: '600',
+                        textAlign: 'center',
+                        letterSpacing: '-0.02em'
+                      }}
+                    >
+                      <option value="">선택</option>
+                      <option value="Spring">봄</option>
+                      <option value="Summer">여름</option>
+                      <option value="Fall">가을</option>
+                      <option value="Winter">겨울</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', textAlign: 'center', fontSize: '1.125rem', fontWeight: 'bold', color: '#4c1d95', marginBottom: '1.25rem', letterSpacing: '-0.02em' }}>
+                    퍼스널 컬러
+                  </label>
+                  <input
+                    type="text"
+                    value={personalColor}
+                    placeholder="예: Warm Spring"
+                    onChange={(e) => setPersonalColor(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '1rem 1.5rem',
+                      border: '3px solid #e9d5ff',
+                      borderRadius: '1rem',
+                      fontSize: '1.125rem',
+                      fontWeight: '600',
+                      textAlign: 'center',
+                      letterSpacing: '-0.02em'
+                    }}
+                  />
+                </div>
+
+                <button
+                  onClick={getRecommendation}
+                  disabled={loading}
+                  style={{
+                    width: '100%',
+                    padding: '1.25rem 2rem',
+                    borderRadius: '1rem',
+                    border: 'none',
+                    fontWeight: 'bold',
+                    fontSize: '1.25rem',
+                    color: 'white',
+                    background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+                    boxShadow: '0 8px 25px rgba(168, 85, 247, 0.3)',
+                    cursor: loading ? 'not-allowed' : 'pointer',
+                    opacity: loading ? 0.6 : 1,
+                    letterSpacing: '-0.02em',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  {loading ? '✨ 추천 중...' : '✨ 추천 받기'}
+                </button>
+
+              </div>
+            </div>
           </div>
 
-          <div>
-            <label className="block text-center text-lg font-bold text-purple-900 mb-5" style={{ letterSpacing: '-0.02em' }}>
-              계절
-            </label>
-            <select
-              value={season}
-              onChange={(e) => setSeason(e.target.value)}
-              className="w-full px-6 py-4 border-3 border-purple-200 rounded-2xl 
-                         focus:ring-4 focus:ring-purple-300 focus:border-purple-400 
-                         transition-all text-center font-semibold text-lg"
-              style={{ letterSpacing: '-0.02em' }}
-            >
-              <option value="">선택</option>
-              <option value="Spring">봄</option>
-              <option value="Summer">여름</option>
-              <option value="Fall">가을</option>
-              <option value="Winter">겨울</option>
-            </select>
-          </div>
-        </div>
-
-        {/* 퍼스널 컬러 */}
-        <div>
-          <label className="block text-center text-lg font-bold text-purple-900 mb-5" style={{ letterSpacing: '-0.02em' }}>
-            퍼스널 컬러
-          </label>
-          <input
-            type="text"
-            value={personalColor}
-            placeholder="예: Warm Spring"
-            onChange={(e) => setPersonalColor(e.target.value)}
-            className="w-full px-6 py-4 border-3 border-purple-200 rounded-2xl 
-                       focus:ring-4 focus:ring-purple-300 focus:border-purple-400 
-                       transition-all text-center font-semibold text-lg"
-            style={{ letterSpacing: '-0.02em' }}
-          />
-        </div>
-
-        {/* 버튼 */}
-        <button
-          onClick={getRecommendation}
-          disabled={loading}
-          className="w-full py-5 rounded-2xl font-bold text-xl text-white shadow-2xl 
-                     hover:shadow-2xl disabled:opacity-50 disabled:cursor-not-allowed 
-                     transition-all duration-300 hover:transform hover:-translate-y-1"
-          style={{
-            background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
-            letterSpacing: '-0.02em'
-          }}
-        >
-          {loading ? '✨ 추천 중...' : '✨ 추천 받기'}
-        </button>
-
-      </div>
-      {/* ⬆⬆⬆ gap-12이 정확히 적용됨 */}
-    </div>
-  </div>
-
-          {/* Right Panel - Results */}
-          <div className="lg:col-span-2">
+          {/* Right Column */}
+          <div style={{ gridColumn: 'span 2' }}>
             {!results && !loading && (
-              <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-20 text-center border-3 border-purple-200">
-                <Sparkles className="w-24 h-24 text-purple-300 mx-auto mb-8 animate-pulse" />
-                <p className="text-purple-700 text-2xl font-bold" style={{ letterSpacing: '-0.02em', lineHeight: '1.6' }}>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '1.5rem',
+                boxShadow: '0 10px 40px rgba(168, 85, 247, 0.15)',
+                padding: '5rem 3rem',
+                textAlign: 'center',
+                border: '3px solid rgba(192, 132, 252, 0.2)'
+              }}>
+                <Sparkles style={{ width: '6rem', height: '6rem', color: '#d8b4fe', margin: '0 auto 2rem auto' }} />
+                <p style={{ color: '#7e22ce', fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em', lineHeight: '1.6' }}>
                   스타일을 입력하고<br/>추천을 받아보세요! 💜
                 </p>
               </div>
             )}
 
             {loading && (
-              <div className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-20 text-center border-3 border-purple-200">
-                <div className="animate-spin rounded-full h-24 w-24 border-b-4 border-purple-600 mx-auto mb-8"></div>
-                <p className="text-purple-700 text-2xl font-bold" style={{ letterSpacing: '-0.02em' }}>AI가 스타일을 분석 중...</p>
+              <div style={{
+                background: 'rgba(255, 255, 255, 0.95)',
+                backdropFilter: 'blur(12px)',
+                borderRadius: '1.5rem',
+                boxShadow: '0 10px 40px rgba(168, 85, 247, 0.15)',
+                padding: '5rem 3rem',
+                textAlign: 'center',
+                border: '3px solid rgba(192, 132, 252, 0.2)'
+              }}>
+                <div style={{
+                  width: '6rem',
+                  height: '6rem',
+                  border: '4px solid rgba(168, 85, 247, 0.2)',
+                  borderTopColor: '#a855f7',
+                  borderRadius: '50%',
+                  animation: 'spin 0.8s linear infinite',
+                  margin: '0 auto 2rem auto'
+                }} />
+                <p style={{ color: '#7e22ce', fontSize: '1.5rem', fontWeight: 'bold', letterSpacing: '-0.02em' }}>
+                  AI가 스타일을 분석 중...
+                </p>
               </div>
             )}
 
             {results && results.outfits && results.outfits.length > 0 && (
-              <div className="flex flex-col gap-12">
-                <div className="flex flex-col items-center gap-8 mb-10">
-                  <h2 className="text-4xl font-bold text-purple-900 text-center" style={{ letterSpacing: '-0.02em' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                  <h2 style={{ fontSize: '2.5rem', fontWeight: 'bold', color: '#4c1d95', marginBottom: '2rem', letterSpacing: '-0.02em' }}>
                     추천 결과 ({results.outfits.length}개)
                   </h2>
-                  <div className={`px-7 py-3 rounded-full text-lg font-bold shadow-xl ${
-                    results.mode === 'mcp' 
-                      ? 'bg-green-100 text-green-800 border-3 border-green-300' 
-                      : 'bg-blue-100 text-blue-800 border-3 border-blue-300'
-                  }`} style={{ letterSpacing: '-0.02em' }}>
+                  <div style={{
+                    display: 'inline-block',
+                    padding: '0.75rem 1.75rem',
+                    borderRadius: '2rem',
+                    fontSize: '1.125rem',
+                    fontWeight: 'bold',
+                    boxShadow: '0 4px 15px rgba(168, 85, 247, 0.2)',
+                    background: results.mode === 'mcp' ? '#d1fae5' : '#dbeafe',
+                    color: results.mode === 'mcp' ? '#065f46' : '#1e40af',
+                    border: results.mode === 'mcp' ? '3px solid #86efac' : '3px solid #93c5fd',
+                    letterSpacing: '-0.02em'
+                  }}>
                     {results.mode === 'mcp' ? '🚀 MCP 모드' : '⚡ Direct 모드'}
                   </div>
                 </div>
 
                 {results.outfits.map((outfit, idx) => (
-                  <div key={idx} className="bg-white/95 backdrop-blur-md rounded-3xl shadow-2xl p-8 hover:shadow-2xl transition-all duration-300 border-3 border-purple-200">
-                    <div className="flex flex-col lg:flex-row items-center gap-12">
+                  <div key={idx} style={{
+                    background: 'rgba(255, 255, 255, 0.95)',
+                    backdropFilter: 'blur(12px)',
+                    borderRadius: '1.5rem',
+                    boxShadow: '0 10px 40px rgba(168, 85, 247, 0.15)',
+                    padding: '2.5rem',
+                    border: '3px solid rgba(192, 132, 252, 0.2)'
+                  }}>
+                    <div style={{ display: 'flex', flexDirection: window.innerWidth < 1024 ? 'column' : 'row', alignItems: 'center', gap: '3rem' }}>
                       
-                      {/* Outfit Image */}
-                      <div className="flex-shrink-0">
+                      <div style={{ flexShrink: 0 }}>
                         {outfit.collage ? (
                           <img
                             src={outfit.collage}
                             alt={`Outfit ${idx + 1}`}
-                            className="w-96 h-96 object-contain bg-purple-50 rounded-3xl shadow-xl"
+                            style={{
+                              width: '24rem',
+                              height: '24rem',
+                              objectFit: 'contain',
+                              background: '#faf5ff',
+                              borderRadius: '1.5rem',
+                              boxShadow: '0 6px 20px rgba(168, 85, 247, 0.12)'
+                            }}
                           />
                         ) : (
-                          <div className="w-96 h-96 bg-purple-50 rounded-3xl flex items-center justify-center">
-                            <p className="text-purple-400 font-bold text-lg">이미지 없음</p>
+                          <div style={{
+                            width: '24rem',
+                            height: '24rem',
+                            background: '#faf5ff',
+                            borderRadius: '1.5rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center'
+                          }}>
+                            <p style={{ color: '#d8b4fe', fontWeight: 'bold', fontSize: '1.125rem' }}>이미지 없음</p>
                           </div>
                         )}
                       </div>
 
-                      {/* Outfit Details */}
-                      <div className="flex-1 text-center lg:text-left">
-                        <h3 className="text-3xl font-bold text-purple-900 mb-10" style={{ letterSpacing: '-0.02em' }}>
+                      <div style={{ flex: 1 }}>
+                        <h3 style={{ fontSize: '2rem', fontWeight: 'bold', color: '#4c1d95', marginBottom: '2.5rem', letterSpacing: '-0.02em' }}>
                           코디 #{idx + 1}
                         </h3>
 
-                        {/* Validation Score */}
                         {outfit.scores && (
-                          <div className="mb-10 p-6 bg-purple-50 rounded-2xl border-3 border-purple-200">
-                            <div className="flex items-center justify-between mb-4">
-                              <span className="text-lg font-bold text-purple-800" style={{ letterSpacing: '-0.02em' }}>검증 점수</span>
-                              <span className={`text-3xl font-bold ${
-                                outfit.scores.accepted ? 'text-green-600' : 'text-yellow-600'
-                              }`}>
+                          <div style={{
+                            marginBottom: '2.5rem',
+                            padding: '1.5rem',
+                            background: '#faf5ff',
+                            borderRadius: '1rem',
+                            border: '3px solid #e9d5ff'
+                          }}>
+                            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                              <span style={{ fontSize: '1.125rem', fontWeight: 'bold', color: '#7e22ce', letterSpacing: '-0.02em' }}>검증 점수</span>
+                              <span style={{
+                                fontSize: '2rem',
+                                fontWeight: 'bold',
+                                color: outfit.scores.accepted ? '#16a34a' : '#ca8a04'
+                              }}>
                                 {(outfit.scores.validation * 100).toFixed(0)}%
                               </span>
                             </div>
-                            <div className={`text-base font-bold px-6 py-3 rounded-xl inline-block ${
-                              outfit.scores.accepted 
-                                ? 'bg-green-100 text-green-800 border-3 border-green-300' 
-                                : 'bg-yellow-100 text-yellow-800 border-3 border-yellow-300'
-                            }`} style={{ letterSpacing: '-0.02em' }}>
+                            <div style={{
+                              display: 'inline-block',
+                              fontSize: '1rem',
+                              fontWeight: 'bold',
+                              padding: '0.75rem 1.5rem',
+                              borderRadius: '0.75rem',
+                              background: outfit.scores.accepted ? '#d1fae5' : '#fef3c7',
+                              color: outfit.scores.accepted ? '#065f46' : '#854d0e',
+                              border: outfit.scores.accepted ? '3px solid #86efac' : '3px solid #fde047',
+                              letterSpacing: '-0.02em'
+                            }}>
                               {outfit.scores.accepted ? '✓ 추천 코디' : '⚠ 주의 필요'}
                             </div>
                           </div>
                         )}
 
-                        {/* Items */}
-                        <div className="flex flex-col gap-12">
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem', marginBottom: '2.5rem' }}>
                           {Object.entries(outfit.items || {}).map(([category, item]) => (
-                            <div key={category} className="flex flex-col lg:flex-row items-center justify-between text-lg bg-white/70 p-5 rounded-2xl border-2 border-purple-200">
-                              <div className="text-center lg:text-left mb-3 lg:mb-0">
-                                <span className="font-bold text-purple-900 capitalize" style={{ letterSpacing: '-0.02em' }}>
+                            <div key={category} style={{
+                              display: 'flex',
+                              flexDirection: window.innerWidth < 768 ? 'column' : 'row',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              fontSize: '1.125rem',
+                              background: 'rgba(255, 255, 255, 0.7)',
+                              padding: '1.25rem',
+                              borderRadius: '1rem',
+                              border: '2px solid #e9d5ff',
+                              gap: '1rem'
+                            }}>
+                              <div style={{ textAlign: window.innerWidth < 768 ? 'center' : 'left' }}>
+                                <span style={{ fontWeight: 'bold', color: '#4c1d95', letterSpacing: '-0.02em', textTransform: 'capitalize' }}>
                                   {category}:
                                 </span>
-                                <span className="text-purple-700 ml-3 font-semibold" style={{ letterSpacing: '-0.02em' }}>
+                                <span style={{ color: '#7e22ce', marginLeft: '0.75rem', fontWeight: '600', letterSpacing: '-0.02em' }}>
                                   {item.name}
                                 </span>
                               </div>
-                              {item.image_url && (
+                              {item.hm_url && (
                                 <a 
-                                  href={item.image_url} 
+                                  href={item.hm_url} 
                                   target="_blank" 
                                   rel="noopener noreferrer"
-                                  className="text-base text-blue-600 hover:text-blue-800 font-bold hover:underline"
-                                  style={{ letterSpacing: '-0.02em' }}
+                                  style={{
+                                    fontSize: '1rem',
+                                    color: '#2563eb',
+                                    fontWeight: 'bold',
+                                    textDecoration: 'none',
+                                    letterSpacing: '-0.02em'
+                                  }}
                                 >
-                                  
-                                  🔗 Google image에서 검색
+                                  🔗 Google에서 검색
                                 </a>
                               )}
                             </div>
                           ))}
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex flex-wrap justify-center lg:justify-start gap-6">
+                        <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: window.innerWidth < 768 ? 'center' : 'flex-start', gap: '1.5rem' }}>
                           <button
                             onClick={() => showToast('👍 좋아요!')}
-                            className="flex items-center gap-3 px-7 py-3.5 bg-pink-100 text-pink-800 rounded-2xl hover:bg-pink-200 transition-all font-bold border-3 border-pink-300 hover:transform hover:-translate-y-1 text-lg"
-                            style={{ letterSpacing: '-0.02em' }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              padding: '1rem 1.75rem',
+                              background: '#fce7f3',
+                              color: '#9f1239',
+                              borderRadius: '1rem',
+                              border: '3px solid #fbcfe8',
+                              fontWeight: 'bold',
+                              fontSize: '1.125rem',
+                              cursor: 'pointer',
+                              letterSpacing: '-0.02em',
+                              transition: 'all 0.3s ease'
+                            }}
                           >
-                            <Heart className="w-5 h-5" />
+                            <Heart style={{ width: '1.25rem', height: '1.25rem' }} />
                             <span>좋아요</span>
                           </button>
                           <button
                             onClick={() => showToast('👎 피드백 저장됨')}
-                            className="flex items-center gap-3 px-7 py-3.5 bg-gray-100 text-gray-800 rounded-2xl hover:bg-gray-200 transition-all font-bold border-3 border-gray-300 hover:transform hover:-translate-y-1 text-lg"
-                            style={{ letterSpacing: '-0.02em' }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '0.75rem',
+                              padding: '1rem 1.75rem',
+                              background: '#f3f4f6',
+                              color: '#374151',
+                              borderRadius: '1rem',
+                              border: '3px solid #d1d5db',
+                              fontWeight: 'bold',
+                              fontSize: '1.125rem',
+                              cursor: 'pointer',
+                              letterSpacing: '-0.02em',
+                              transition: 'all 0.3s ease'
+                            }}
                           >
-                            <ThumbsDown className="w-5 h-5" />
+                            <ThumbsDown style={{ width: '1.25rem', height: '1.25rem' }} />
                             <span>싫어요</span>
                           </button>
                         </div>
@@ -465,6 +632,12 @@ const OutfitRecommendationUI = () => {
           </div>
         </div>
       </div>
+      
+      <style>{`
+        @keyframes spin {
+          to { transform: rotate(360deg); }
+        }
+      `}</style>
     </div>
   );
 };

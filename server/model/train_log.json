@@ -1,0 +1,19 @@
+{
+    "wandb": {
+      "train": {
+        "approx_kl": 0.0098,
+        "clip_fraction": 0.3918,
+        "entropy_loss": -3.70672,
+        "explained_variance": 0.81824,
+        "learning_rate": 0.0001,
+        "loss": -0.132,
+        "policy_gradient_loss": -0.05224,
+        "value_loss": 0.07221
+      },
+      "validation": {
+        "accepted": 1,
+        "score": 0.7710
+      }
+    }
+  }
+  

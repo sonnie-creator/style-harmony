@@ -1,0 +1,378 @@
+{
+  "user_id": "user1",
+  "created_at": "2025-12-14T21:15:09.736125",
+  "preferences": {
+    "liked_outfits": [
+      {
+        "user_id": "user1",
+        "outfit_id": "1",
+        "feedback_type": "like",
+        "outfit_items": {
+          "top": {
+            "id": "799135",
+            "name": "RC LUCAS LS LINEN",
+            "style": "Shirt",
+            "color": "White"
+          },
+          "bottom": {
+            "id": "753512",
+            "name": "Skinny Midprice No Fade Black",
+            "style": "Trousers",
+            "color": "Black"
+          },
+          "outer": {
+            "id": "573418",
+            "name": "Ratt Denim Jacket",
+            "style": "Jacket",
+            "color": "Black"
+          },
+          "shoes": {
+            "id": "763713",
+            "name": "Bay Deck Shoe PQ",
+            "style": "Other shoe",
+            "color": "Yellowish Brown"
+          },
+          "accessories": {
+            "id": "835665",
+            "name": "Clearglasses Claudio",
+            "style": "Sunglasses",
+            "color": "Black"
+          }
+        },
+        "prompt": "캐주얼한 데이트룩",
+        "timestamp": "2025-12-14T21:15:09.733446",
+        "metadata": {
+          "gender": "Men",
+          "age": "",
+          "personalColor": "",
+          "season": ""
+        }
+      }
+    ],
+    "disliked_outfits": [
+      {
+        "user_id": "user1",
+        "outfit_id": "2",
+        "feedback_type": "dislike",
+        "outfit_items": {
+          "top": {
+            "id": "711601",
+            "name": "Black Denim Shirt",
+            "style": "Shirt",
+            "color": "Black"
+          },
+          "bottom": {
+            "id": "693269",
+            "name": "Rogge Worker",
+            "style": "Trousers",
+            "color": "Dark Beige"
+          },
+          "outer": {
+            "id": "504404",
+            "name": "Godzilla",
+            "style": "Jacket",
+            "color": "Black"
+          },
+          "shoes": {
+            "id": "782813",
+            "name": "Tommy Sneaker",
+            "style": "Sneakers",
+            "color": "Dark Beige"
+          },
+          "accessories": {
+            "id": "787523",
+            "name": "Hat Salomon Woolmix",
+            "style": "Cap",
+            "color": "Yellowish Brown"
+          }
+        },
+        "prompt": "캐주얼한 데이트룩",
+        "timestamp": "2025-12-14T21:19:48.533617",
+        "metadata": {
+          "gender": "Men",
+          "age": "",
+          "personalColor": "",
+          "season": ""
+        }
+      }
+    ],
+    "liked_items": [
+      {
+        "user_id": "user1",
+        "outfit_id": "1",
+        "feedback_type": "like",
+        "outfit_items": {
+          "top": {
+            "id": "525590",
+            "name": "FT Scorchio top",
+            "style": "Vest top",
+            "color": "White"
+          },
+          "bottom": {
+            "id": "525512",
+            "name": "FT Mae skirt",
+            "style": "Skirt",
+            "color": "Light Pink"
+          },
+          "outer": {
+            "id": "615675",
+            "name": "SC SERENITY coat",
+            "style": "Coat",
+            "color": "Black"
+          },
+          "shoes": {
+            "id": "735020",
+            "name": "Justin Sport Sandal SB",
+            "style": "Sandals",
+            "color": "Dark Blue"
+          },
+          "accessories": {
+            "id": "930866",
+            "name": "Class Truth hoop",
+            "style": "Earring",
+            "color": "Silver"
+          }
+        },
+        "prompt": "d",
+        "timestamp": "2025-12-15T10:57:10.128658",
+        "metadata": {
+          "gender": "All",
+          "age": "",
+          "personalColor": "",
+          "season": ""
+        }
+      }
+    ],
+    "disliked_items": [
+      {
+        "user_id": "user1",
+        "outfit_id": "2",
+        "feedback_type": "dislike",
+        "outfit_items": {
+          "top": {
+            "id": "650181",
+            "name": "ME PALOMA BLOUSE 2",
+            "style": "Blouse",
+            "color": "White"
+          },
+          "bottom": {
+            "id": "550718",
+            "name": "Chamonix ski pants",
+            "style": "Trousers",
+            "color": "Black"
+          },
+          "outer": {
+            "id": "666195",
+            "name": "Rut PJ jacket",
+            "style": "Jacket",
+            "color": "Beige"
+          },
+          "shoes": {
+            "id": "762977",
+            "name": "LS flip flop",
+            "style": "Flip flop",
+            "color": "Light Beige"
+          },
+          "accessories": {
+            "id": "796134",
+            "name": "SC - ZIM padded scarf",
+            "style": "Scarf",
+            "color": "Black"
+          }
+        },
+        "prompt": "d",
+        "timestamp": "2025-12-15T10:57:29.780222",
+        "metadata": {
+          "gender": "All",
+          "age": "",
+          "personalColor": "",
+          "season": ""
+        }
+      }
+    ],
+    "preferred_styles": [],
+    "disliked_colors": []
+  },
+  "history": [
+    {
+      "user_id": "user1",
+      "outfit_id": "1",
+      "feedback_type": "like",
+      "outfit_items": {
+        "top": {
+          "id": "799135",
+          "name": "RC LUCAS LS LINEN",
+          "style": "Shirt",
+          "color": "White"
+        },
+        "bottom": {
+          "id": "753512",
+          "name": "Skinny Midprice No Fade Black",
+          "style": "Trousers",
+          "color": "Black"
+        },
+        "outer": {
+          "id": "573418",
+          "name": "Ratt Denim Jacket",
+          "style": "Jacket",
+          "color": "Black"
+        },
+        "shoes": {
+          "id": "763713",
+          "name": "Bay Deck Shoe PQ",
+          "style": "Other shoe",
+          "color": "Yellowish Brown"
+        },
+        "accessories": {
+          "id": "835665",
+          "name": "Clearglasses Claudio",
+          "style": "Sunglasses",
+          "color": "Black"
+        }
+      },
+      "prompt": "캐주얼한 데이트룩",
+      "timestamp": "2025-12-14T21:15:09.733446",
+      "metadata": {
+        "gender": "Men",
+        "age": "",
+        "personalColor": "",
+        "season": ""
+      }
+    },
+    {
+      "user_id": "user1",
+      "outfit_id": "2",
+      "feedback_type": "dislike",
+      "outfit_items": {
+        "top": {
+          "id": "711601",
+          "name": "Black Denim Shirt",
+          "style": "Shirt",
+          "color": "Black"
+        },
+        "bottom": {
+          "id": "693269",
+          "name": "Rogge Worker",
+          "style": "Trousers",
+          "color": "Dark Beige"
+        },
+        "outer": {
+          "id": "504404",
+          "name": "Godzilla",
+          "style": "Jacket",
+          "color": "Black"
+        },
+        "shoes": {
+          "id": "782813",
+          "name": "Tommy Sneaker",
+          "style": "Sneakers",
+          "color": "Dark Beige"
+        },
+        "accessories": {
+          "id": "787523",
+          "name": "Hat Salomon Woolmix",
+          "style": "Cap",
+          "color": "Yellowish Brown"
+        }
+      },
+      "prompt": "캐주얼한 데이트룩",
+      "timestamp": "2025-12-14T21:19:48.533617",
+      "metadata": {
+        "gender": "Men",
+        "age": "",
+        "personalColor": "",
+        "season": ""
+      }
+    },
+    {
+      "user_id": "user1",
+      "outfit_id": "1",
+      "feedback_type": "like",
+      "outfit_items": {
+        "top": {
+          "id": "525590",
+          "name": "FT Scorchio top",
+          "style": "Vest top",
+          "color": "White"
+        },
+        "bottom": {
+          "id": "525512",
+          "name": "FT Mae skirt",
+          "style": "Skirt",
+          "color": "Light Pink"
+        },
+        "outer": {
+          "id": "615675",
+          "name": "SC SERENITY coat",
+          "style": "Coat",
+          "color": "Black"
+        },
+        "shoes": {
+          "id": "735020",
+          "name": "Justin Sport Sandal SB",
+          "style": "Sandals",
+          "color": "Dark Blue"
+        },
+        "accessories": {
+          "id": "930866",
+          "name": "Class Truth hoop",
+          "style": "Earring",
+          "color": "Silver"
+        }
+      },
+      "prompt": "d",
+      "timestamp": "2025-12-15T10:57:10.128658",
+      "metadata": {
+        "gender": "All",
+        "age": "",
+        "personalColor": "",
+        "season": ""
+      }
+    },
+    {
+      "user_id": "user1",
+      "outfit_id": "2",
+      "feedback_type": "dislike",
+      "outfit_items": {
+        "top": {
+          "id": "650181",
+          "name": "ME PALOMA BLOUSE 2",
+          "style": "Blouse",
+          "color": "White"
+        },
+        "bottom": {
+          "id": "550718",
+          "name": "Chamonix ski pants",
+          "style": "Trousers",
+          "color": "Black"
+        },
+        "outer": {
+          "id": "666195",
+          "name": "Rut PJ jacket",
+          "style": "Jacket",
+          "color": "Beige"
+        },
+        "shoes": {
+          "id": "762977",
+          "name": "LS flip flop",
+          "style": "Flip flop",
+          "color": "Light Beige"
+        },
+        "accessories": {
+          "id": "796134",
+          "name": "SC - ZIM padded scarf",
+          "style": "Scarf",
+          "color": "Black"
+        }
+      },
+      "prompt": "d",
+      "timestamp": "2025-12-15T10:57:29.780222",
+      "metadata": {
+        "gender": "All",
+        "age": "",
+        "personalColor": "",
+        "season": ""
+      }
+    }
+  ]
+}

@@ -4,7 +4,8 @@ torchaudio>=2.2.0
 
 transformers>=4.40.0
 accelerate>=0.28.0
-
+dataset
+wandb
 numpy>=1.26
 pandas>=2.2.0
 
@@ -21,3 +22,4 @@ mcp
 rich>=13.7.0
 onnxruntime
 deep_translator
+huggingface_hub

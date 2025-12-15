@@ -8,7 +8,9 @@ import mcp.types as types
 import json
 import os
 from PIL import Image
-
+from huggingface_hub import hf_hub_download
+os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "1"
 
 class MCPToolServer:
     def __init__(self, name="fashion-reco-mcp"):
@@ -184,78 +186,148 @@ class MCPToolServer:
         return [types.TextContent(type="text", text=json.dumps(result, ensure_ascii=False))]
     
     async def _create_collage(self, args: dict) -> list[types.TextContent]:
-        """콜라주 이미지 생성"""
+        """콜라주 이미지 생성 (HF Hub 연동)"""
         from app_globals.utils import create_outfit_collage_v3, remove_background, image_to_base64
+        from huggingface_hub import hf_hub_download
+        import os
+        from PIL import Image
+        import sys
         
         items = args.get("items", {})
         pil_items = {}
-        
+
+        repo_id = "Sonnie108/style-harmony"
+        repo_type = "dataset"
+        local_root = "./server/data_sources/images"
+        os.makedirs(local_root, exist_ok=True)
+
+        # HF 레포에 있는 폴더 리스트
+        hf_folders = ["images_part1", "images_part2", "images_part3"]
+
         for cat, item_data in items.items():
-            img_path = item_data.get("image_path")
-            if not img_path or not os.path.exists(img_path):
+            img_file = os.path.basename(item_data.get("image_path", ""))
+            if not img_file:
+                print(f"[Warning] {cat} 아이템에 image_path 없음", file=sys.stderr, flush=True)
                 continue
             
-            img = Image.open(img_path).convert("RGBA")
-            pil_items[cat] = remove_background(img)
+            # 로컬 파일 경로 (루트에 직접 저장)
+            local_path = os.path.join(local_root, img_file)
+
+            # 로컬에 없으면 HF Hub에서 다운로드 시도
+            if not os.path.exists(local_path):
+                downloaded = False
+                for folder in hf_folders:
+                    hf_file_path = f"{folder}/{img_file}"
+                    try:
+                        # ⭐ hf_hub_download는 원본 경로 구조를 유지하므로
+                        # local_dir_use_symlinks=False로 실제 파일 복사
+                        downloaded_path = hf_hub_download(
+                            repo_id=repo_id,
+                            repo_type=repo_type,
+                            filename=hf_file_path,
+                            local_dir=local_root,
+                            local_dir_use_symlinks=False
+                        )
+                        
+                        # ⭐ 다운로드된 파일을 루트로 이동
+                        # downloaded_path는 ./server/data_sources/images/images_part1/xxx.jpg
+                        if os.path.exists(downloaded_path) and downloaded_path != local_path:
+                            import shutil
+                            shutil.move(downloaded_path, local_path)
+                            print(f"[Success] {img_file} 다운로드 완료", file=sys.stderr, flush=True)
+                        
+                        downloaded = True
+                        break
+                        
+                    except Exception as e:
+                        print(f"[Debug] {folder}에서 {img_file} 다운로드 시도 실패: {e}", file=sys.stderr, flush=True)
+                        continue
+                
+                if not downloaded:
+                    print(f"[Warning] {img_file} 다운로드 실패 (모든 폴더 시도 완료)", file=sys.stderr, flush=True)
+                    continue
+
+            # 이미지 열기 및 배경 제거
+            try:
+                if os.path.exists(local_path):
+                    img = Image.open(local_path).convert("RGBA")
+                    pil_items[cat] = remove_background(img)
+                else:
+                    print(f"[Warning] {local_path} 파일 없음", file=sys.stderr, flush=True)
+            except Exception as e:
+                print(f"[Error] {img_file} 이미지 처리 실패: {e}", file=sys.stderr, flush=True)
+                continue
+
+        # 콜라주 생성
+        if not pil_items:
+            print(f"[Warning] 콜라주 생성 가능한 이미지 없음", file=sys.stderr, flush=True)
+            return [types.TextContent(type="text", text=json.dumps({"collage_base64": ""}))]
         
-        collage = create_outfit_collage_v3(pil_items)
-        collage_b64 = image_to_base64(collage)
-        
-        result = {
-            "collage_base64": f"data:image/png;base64,{collage_b64}"
-        }
+        try:
+            collage = create_outfit_collage_v3(pil_items)
+            collage_b64 = image_to_base64(collage)
+            result = {"collage_base64": f"data:image/png;base64,{collage_b64}"}
+            print(f"[Success] 콜라주 생성 완료, base64 길이: {len(collage_b64)}", file=sys.stderr, flush=True)
+        except Exception as e:
+            print(f"[Error] 콜라주 생성 실패: {e}", file=sys.stderr, flush=True)
+            result = {"collage_base64": ""}
+
         return [types.TextContent(type="text", text=json.dumps(result))]
-    
+
     async def _full_pipeline(self, args: dict) -> list[types.TextContent]:
-        
-        """전체 파이프라인 실행"""
+        """전체 파이프라인 실행 (진행 상태 및 처리된 프롬프트/결과 포함)"""
         # 1. 프롬프트 분석
-        prompt = args.get("prompt", "")  # 최소 prompt는 빈 문자열로 처리
+        prompt = args.get("prompt", "")
+
         analyze_result = await self._analyze_prompt({"prompt": prompt})
         analysis = json.loads(analyze_result[0].text)
-        
-        # 2. 프롬프트 강화 (선택값이 있을 때만 추가)
+
+        # 2. 프롬프트 강화
         enriched_prompt = analysis["translated_prompt"]
+        step_info = {"translated_prompt": enriched_prompt}
         if args.get("age"):
             enriched_prompt += f" for {args['age']} year old"
+            step_info["age_info"] = args["age"]
         if args.get("gender") and args["gender"] != "All":
             enriched_prompt += f" {args['gender'].lower()}."
+            step_info["gender_info"] = args["gender"]
         if args.get("personal_color"):
             enriched_prompt += f" Personal color is {args['personal_color']}."
+            step_info["personal_color"] = args["personal_color"]
         if args.get("season"):
             enriched_prompt += f" Suitable for {args['season']} season."
-        
+            step_info["season"] = args["season"]
+
         # 3. 추천 생성
-        recommend_kwargs = {
+        recommend_kwargs = {k: v for k, v in {
             "prompt": enriched_prompt,
             "gender": args.get("gender"),
             "age": args.get("age"),
             "personal_color": args.get("personal_color"),
             "season": args.get("season")
-        }
-        # None인 값 제거
-        recommend_kwargs = {k: v for k, v in recommend_kwargs.items() if v is not None}
-        
+        }.items() if v is not None}
+
+
         recommend_result = await self._recommend_outfits(recommend_kwargs)
         outfits = json.loads(recommend_result[0].text)
-                
-        # 3. 추천 생성
 
         # 4. 각 아웃핏 검증 및 콜라주 생성
         processed_outfits = []
-        for outfit in outfits:
-            item_ids = [item["id"] for item in outfit["items"].values()]
-            
+        for i, outfit in enumerate(outfits):
+            progress_base = 0.3 + 0.6 * (i / len(outfits))
+
             # 검증
             validate_result = await self._validate_outfit({
-                "item_ids": item_ids,
+                "item_ids": [item["id"] for item in outfit["items"].values()],
                 "user_id": args.get("user_id")
             })
             validation = json.loads(validate_result[0].text)
-            
+
             # 콜라주 생성
+            
             collage_result = await self._create_collage({"items": outfit["items"]})
             collage = json.loads(collage_result[0].text)
+            collage_base64 = collage.get("collage_base64", "")
             
             processed_outfits.append({
                 "outfit_id": outfit["outfit_id"],
@@ -263,14 +335,15 @@ class MCPToolServer:
                 "validation": validation,
                 "collage": collage["collage_base64"]
             })
-        
+
         final_result = {
             "outfits": processed_outfits,
-            "original_prompt": args.get("prompt", ""),
+            "original_prompt": prompt,
             "translated_prompt": analysis["translated_prompt"]
         }
-        
+
         return [types.TextContent(type="text", text=json.dumps(final_result, ensure_ascii=False))]
+
     
     async def run(self):
         """MCP 서버 실행 (stdio 모드)"""
@@ -279,7 +352,7 @@ class MCPToolServer:
         from mcp.server.models import InitializationOptions
         import sys
         
-        # 디버깅용 로그는 stderr로만 출력
+
         print("MCP Server initialized", file=sys.stderr, flush=True)
         
         async with stdio_server() as (read_stream, write_stream):
