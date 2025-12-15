@@ -220,13 +220,6 @@ The response includes:
   * Easier debugging and testing
   * Scalable future extensions
 
-필요하시면 다음도 도와드릴 수 있습니다.
-
-* README 축약 버전
-* API 명세(OpenAPI 기준)
-* 배포 환경용 실행 가이드
-* MCP ↔ FastAPI 통신 흐름 다이어그램
-
 ---
 
 ## License
