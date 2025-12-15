@@ -1,4 +1,3 @@
-좋습니다. 지금까지의 내용과 MCP 서버 구조, Direct 모드, 데이터 준비, 실행, API 예시, Tool 단위 설명까지 포함해서 **전체 README.md** 파일 형태로 정리하면 아래와 같습니다.
 
 ````markdown
 # Fashion Recommendation System
