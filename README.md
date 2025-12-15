@@ -1,5 +1,4 @@
 
-````markdown
 # Fashion Recommendation System
 
 사용자 프롬프트 기반 패션 아웃핏 추천 시스템입니다. MCP 서버와 FastAPI 서버를 활용하여 아웃핏 추천, 검증, 콜라주 생성 등 전체 파이프라인을 제공합니다.
@@ -13,9 +12,7 @@
 - **아웃핏 검증** (`validate_outfit`)
 - **아웃핏 콜라주 생성** (`create_outfit_collage`)
 - **전체 추천 파이프라인** (`full_recommendation_pipeline`)
-- **MCP 모드와 Direct 모드 지원**  
-  - MCP 서버 실행 시 Tool 기반 모드  
-  - MCP 서버 미실행 시 Direct 모드 (PPO 모델 사용)
+- **MCP 모드 지원**  
 
 > Tool 단위로 기능을 분리하여 모듈화, 재사용성, 유지보수 용이성을 확보했습니다.
 
@@ -31,28 +28,9 @@ pip install -r requirements.txt
 
 ---
 
-## 데이터 준비
-
-`data_sources` 폴더에 필요한 데이터와 이미지를 배치합니다.
-
-1. Hugging Face Hub에서 `dataset.pkl` 다운로드:
-
-```python
-from huggingface_hub import hf_hub_download
-
-dataset_file = hf_hub_download(
-    repo_id="Sonnie108/style-harmony",
-    filename="dataset.pkl"
-)
-```
-
-2. 이미지 파일은 `data_sources` 폴더 내 카테고리별 서브폴더에 배치
-
----
-
 ## 실행 방법
 
-### 1. MCP 서버 실행 (권장)
+### 1. MCP 서버 실행
 
 MCP 서버를 먼저 실행하면 FastAPI 서버는 MCP 모드로 동작합니다.
 
@@ -92,13 +70,6 @@ curl -X POST "http://127.0.0.1:8002/recommend" \
 
 ---
 
-## Direct 모드
-
-* MCP 서버 없이도 FastAPI 서버 단독 실행 가능
-* 내부적으로 PPO 모델 기반 Direct 추천 수행
-* 프롬프트 번역, 강화, 추천, 검증, 콜라주 생성 포함
-
----
 
 ## 구조 설명
 
