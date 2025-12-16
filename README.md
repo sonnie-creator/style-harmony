@@ -5,6 +5,21 @@
 This project is a **prompt-driven fashion outfit recommendation system** built with an **MCP Tool Server** and a **FastAPI server**.
 It provides an end-to-end pipeline including outfit recommendation, validation, and collage generation.
 
+## Outfit Processing Pipeline 
+
+1. **Prompt Analysis & Translation**
+2. **Prompt Enrichment**
+
+   * Age
+   * Gender
+   * Personal color
+   * Season
+3. **Outfit Recommendation**
+    PPO-Based Recommendation Model (MCP Tool)
+4. **Outfit Validation**
+5. **Collage Generation**
+6. **Final Response**
+
 ---
 
 ## Features
@@ -22,25 +37,17 @@ It provides an end-to-end pipeline including outfit recommendation, validation, 
 
 ## Requirements
 
-* Python 3.10 or higher
+* Python 3.12
 * Install required dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
----
 
 ## How to Run
 
 ### 1. Run the MCP Tool Server
-
-If the MCP server is running, the FastAPI server will automatically operate in **MCP mode**.
-
-```bash
-python mcp_tool_server.py
-```
-
 #### Available Tools
 
 | Tool Name                      | Description                                                                   |
@@ -51,19 +58,19 @@ python mcp_tool_server.py
 | `create_outfit_collage`        | Generates a collage image from outfit items                                   |
 | `full_recommendation_pipeline` | Executes the full pipeline (analysis → recommendation → validation → collage) |
 
----
-
-### 2. Run the FastAPI Server
 
 ```bash
-uvicorn project.server.ui_server:app --host 0.0.0.0 --port 8002
+cd project/server
+uvicorn ui_server:app --host 0.0.0.0 --port 8002
 ```
 
 * **MCP server connected** → MCP mode
-* **MCP server not connected** → Direct mode (fallback)
-
 ---
-
+### 2. UI 
+```bash
+cd project/fashion-ui
+npm run dev
+```
 ### 3. API Request Example
 
 ```bash
@@ -100,59 +107,21 @@ FastAPI Server
 
 ### FastAPI Server
 
-* Supports both **MCP mode** and **Direct mode**
+* Supports **MCP mode**
 * Automatically detects MCP availability at runtime
 * Aggregates recommendation results, validation output, and collage images into a single API response
 
 ---
+### Model
+The core outfit recommendation logic is powered by a PPO-trained reinforcement learning model.
 
-## Outfit Processing Pipeline 
-
-1. **Prompt Analysis & Translation**
-2. **Prompt Enrichment**
-
-   * Age
-   * Gender
-   * Personal color
-   * Season
-3. **Outfit Recommendation**
-    PPO-Based Recommendation Model (MCP Tool)
-
-The core outfit recommendation logic inside the MCP Tool Server is powered by a PPO-trained reinforcement learning model.
-
-Training Overview
-
-The model was trained using Proximal Policy Optimization (PPO) in a custom Gymnasium environment for sequential outfit composition.
-
-Each episode samples a fashion prompt and the agent selects items step by step to form a complete outfit.
-
-Training prompts are derived from the neuralwork/fashion-style-instruct dataset.
-
-Reward Design
-
-The base environment reward reflects prompt–item semantic similarity and outfit coherence.
-
-A ValidationAgent evaluates the final outfit and injects a validation score into the terminal reward:
-
-final_reward =
-  (1 - validation_weight) * env_reward
-  + validation_weight * validation_score
-
-
-During training, user personalization is disabled to avoid user-specific bias.
-Personalization is applied only at inference time via MCP Tools.
-
-Integration into MCP
-
-The trained PPO model is loaded inside the MCP Tool Server.
-
-MCP tools such as recommend_outfits and full_recommendation_pipeline internally invoke the PPO policy to generate outfit candidates.
+A custom Gymnasium environment is used for sequential outfit composition, where the agent selects items step by step based on fashion prompts from the neuralwork/fashion-style-instruct dataset.
 
 The MCP layer handles prompt analysis, validation, and collage generation around the PPO-based core model. Models are available at: [Sonnie108/ppo-fashion-harmony](https://huggingface.co/Sonnie108/ppo-fashion-harmony)
 
-   * MCP Tool-based pipeline or Direct PPO-based model
-4. **Outfit Validation**
-5. **Collage Generation**
+   * MCP Tool-based pipeline
+
+### Collage Generation
 
    * Background removal
    * Transparent image composition
@@ -160,9 +129,6 @@ Item images are downloaded on demand via Hugging Face Hub: [Sonnie108/style-harm
 Images are fetched in real time and cached locally
 Transparent PNGs are composed into a single outfit collage layout
 
-6. **Final Response**
-
-   * JSON output including Base64-encoded collage images
 
 ---
 
