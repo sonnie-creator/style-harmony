@@ -1,134 +1,224 @@
-좋습니다. 지금까지의 내용과 MCP 서버 구조, Direct 모드, 데이터 준비, 실행, API 예시, Tool 단위 설명까지 포함해서 **전체 README.md** 파일 형태로 정리하면 아래와 같습니다.
 
-````markdown
-# Fashion Recommendation System
+# Prompt-Based Fashion Outfit Recommendation System
+<img width="1887" height="895" alt="image" src="https://github.com/user-attachments/assets/bbec83fd-66bb-4f42-9d69-09600b1df7a6" />
 
-사용자 프롬프트 기반 패션 아웃핏 추천 시스템입니다. MCP 서버와 FastAPI 서버를 활용하여 아웃핏 추천, 검증, 콜라주 생성 등 전체 파이프라인을 제공합니다.
+This project is a **prompt-driven fashion outfit recommendation system** built with an **MCP Tool Server** and a **FastAPI server**.
+It provides an end-to-end pipeline including outfit recommendation, validation, and collage generation.
 
 ---
 
 ## Features
 
-- **프롬프트 분석 및 번역** (`analyze_prompt`)
-- **스타일 기반 아웃핏 추천** (`recommend_outfits`)
-- **아웃핏 검증** (`validate_outfit`)
-- **아웃핏 콜라주 생성** (`create_outfit_collage`)
-- **전체 추천 파이프라인** (`full_recommendation_pipeline`)
-- **MCP 모드와 Direct 모드 지원**  
-  - MCP 서버 실행 시 Tool 기반 모드  
-  - MCP 서버 미실행 시 Direct 모드 (PPO 모델 사용)
+* **Prompt Analysis & Translation** (`analyze_prompt`)
+* **Style-Based Outfit Recommendation** (`recommend_outfits`)
+* **Outfit Validation** (`validate_outfit`)
+* **Outfit Collage Generation** (`create_outfit_collage`)
+* **Full Recommendation Pipeline** (`full_recommendation_pipeline`)
+* **MCP Mode Support**
 
-> Tool 단위로 기능을 분리하여 모듈화, 재사용성, 유지보수 용이성을 확보했습니다.
+> Core functionalities are modularized into Tool units to ensure **reusability, maintainability, and extensibility**.
 
 ---
 
 ## Requirements
 
-- Python 3.10 이상
-- 필요한 라이브러리 설치:
+* Python 3.10 or higher
+* Install required dependencies:
+
 ```bash
 pip install -r requirements.txt
-````
-
----
-
-## 데이터 준비
-
-`data_sources` 폴더에 필요한 데이터와 이미지를 배치합니다.
-
-1. Hugging Face Hub에서 `dataset.pkl` 다운로드:
-
-```python
-from huggingface_hub import hf_hub_download
-
-dataset_file = hf_hub_download(
-    repo_id="Sonnie108/style-harmony",
-    filename="dataset.pkl"
-)
 ```
 
-2. 이미지 파일은 `data_sources` 폴더 내 카테고리별 서브폴더에 배치
-
 ---
 
-## 실행 방법
+## How to Run
 
-### 1. MCP 서버 실행 (권장)
+### 1. Run the MCP Tool Server
 
-MCP 서버를 먼저 실행하면 FastAPI 서버는 MCP 모드로 동작합니다.
+If the MCP server is running, the FastAPI server will automatically operate in **MCP mode**.
 
 ```bash
 python mcp_tool_server.py
 ```
 
-#### Tool별 기능
+#### Available Tools
 
-| Tool 이름                        | 기능                            |
-| ------------------------------ | ----------------------------- |
-| `analyze_prompt`               | 입력 프롬프트 언어 감지 및 번역            |
-| `recommend_outfits`            | 스타일 기반 아웃핏 3개 추천              |
-| `validate_outfit`              | 아웃핏 조합 검증                     |
-| `create_outfit_collage`        | 아웃핏 아이템 콜라주 생성                |
-| `full_recommendation_pipeline` | 전체 추천 파이프라인 실행 (분석→추천→검증→콜라주) |
+| Tool Name                      | Description                                                                   |
+| ------------------------------ | ----------------------------------------------------------------------------- |
+| `analyze_prompt`               | Detects input language and translates the prompt                              |
+| `recommend_outfits`            | Recommends 3 outfits based on style prompt                                    |
+| `validate_outfit`              | Validates whether an outfit combination is appropriate                        |
+| `create_outfit_collage`        | Generates a collage image from outfit items                                   |
+| `full_recommendation_pipeline` | Executes the full pipeline (analysis → recommendation → validation → collage) |
 
-### 2. FastAPI 서버 실행
+---
+
+### 2. Run the FastAPI Server
 
 ```bash
 uvicorn project.server.ui_server:app --host 0.0.0.0 --port 8002
 ```
 
-* MCP 서버 연결 시: MCP 모드
-* MCP 서버 미연결 시: Direct 모드
+* **MCP server connected** → MCP mode
+* **MCP server not connected** → Direct mode (fallback)
 
-### 3. API 호출 예시
+---
+
+### 3. API Request Example
 
 ```bash
 curl -X POST "http://127.0.0.1:8002/recommend" \
 -H "Content-Type: application/json" \
 -d '{
-    "prompt": "Summer casual outfit",
-    "gender": "Women"
+  "prompt": "Summer casual outfit",
+  "gender": "Women"
 }'
 ```
 
 ---
 
-## Direct 모드
+## System Architecture
 
-* MCP 서버 없이도 FastAPI 서버 단독 실행 가능
-* 내부적으로 PPO 모델 기반 Direct 추천 수행
-* 프롬프트 번역, 강화, 추천, 검증, 콜라주 생성 포함
+### MCP Tool Server
 
----
+* Core logic is separated into independent Tools
+* Each Tool follows a **single responsibility principle**
+* Tools can be reused, combined, or extended independently
 
-## 구조 설명
-
-* **MCP Tool Server 구조**
-
-  * 핵심 로직을 Tool 단위로 분리
-  * Tool 단위 분리 이유:
-
-    1. 단일 책임 원칙(SRP) 준수
-    2. 재사용성 확보
-    3. 유연한 조합 가능
-    4. 에러 격리 및 디버깅 용이
-    5. 확장성 확보
-* **FastAPI 서버**
-
-  * MCP 모드와 Direct 모드를 모두 지원
-  * API 호출 시 자동으로 MCP 연결 여부 확인 후 모드 선택
-  * 추천 결과 처리 및 콜라주 생성, 검증까지 통합
+```
+Client
+  ↓ HTTP
+FastAPI Server
+  └─ MCP connected → MCP Tool Server
+                       ├─ analyze_prompt
+                       ├─ recommend_outfits
+                       ├─ validate_outfit
+                       └─ create_outfit_collage
+```
 
 ---
 
-## Outfits 처리 과정 (요약)
+### FastAPI Server
 
-1. **프롬프트 분석 및 번역**
-2. **프롬프트 강화** (나이, 성별, 퍼스널 컬러, 계절 등)
-3. **추천 생성** (MCP Tool / Direct PPO 모델)
-4. **아웃핏 검증** (Validator)
-5. **콜라주 생성** (Transparent 이미지 + 배치)
-6. **결과 반환** (JSON, Base64 이미지 포함)
+* Supports both **MCP mode** and **Direct mode**
+* Automatically detects MCP availability at runtime
+* Aggregates recommendation results, validation output, and collage images into a single API response
+
+---
+
+## Outfit Processing Pipeline 
+
+1. **Prompt Analysis & Translation**
+2. **Prompt Enrichment**
+
+   * Age
+   * Gender
+   * Personal color
+   * Season
+3. **Outfit Recommendation**
+    PPO-Based Recommendation Model (MCP Tool)
+
+The core outfit recommendation logic inside the MCP Tool Server is powered by a PPO-trained reinforcement learning model.
+
+Training Overview
+
+The model was trained using Proximal Policy Optimization (PPO) in a custom Gymnasium environment for sequential outfit composition.
+
+Each episode samples a fashion prompt and the agent selects items step by step to form a complete outfit.
+
+Training prompts are derived from the neuralwork/fashion-style-instruct dataset.
+
+Reward Design
+
+The base environment reward reflects prompt–item semantic similarity and outfit coherence.
+
+A ValidationAgent evaluates the final outfit and injects a validation score into the terminal reward:
+
+final_reward =
+  (1 - validation_weight) * env_reward
+  + validation_weight * validation_score
+
+
+During training, user personalization is disabled to avoid user-specific bias.
+Personalization is applied only at inference time via MCP Tools.
+
+Integration into MCP
+
+The trained PPO model is loaded inside the MCP Tool Server.
+
+MCP tools such as recommend_outfits and full_recommendation_pipeline internally invoke the PPO policy to generate outfit candidates.
+
+The MCP layer handles prompt analysis, validation, and collage generation around the PPO-based core model. Models are available at: [Sonnie108/ppo-fashion-harmony](https://huggingface.co/Sonnie108/ppo-fashion-harmony)
+
+   * MCP Tool-based pipeline or Direct PPO-based model
+4. **Outfit Validation**
+5. **Collage Generation**
+
+   * Background removal
+   * Transparent image composition
+Item images are downloaded on demand via Hugging Face Hub: [Sonnie108/style-harmony](https://huggingface.co/datasets/Sonnie108/style-harmony)
+Images are fetched in real time and cached locally
+Transparent PNGs are composed into a single outfit collage layout
+
+6. **Final Response**
+
+   * JSON output including Base64-encoded collage images
+
+---
+
+## Example Recommendation Output
+
+**Input**
+
+```json
+{
+  "prompt": "Minimal summer outfit for casual office wear",
+  "gender": "Women",
+  "season": "Summer"
+}
+```
+
+**Output (simplified)**
+
+```json
+{
+  "outfits": [
+    {
+      "outfit_id": "outfit_001",
+      "items": {
+        "top": { "id": "top_123", "name": "Linen Blouse" },
+        "bottom": { "id": "bottom_456", "name": "Wide Slacks" },
+        "shoes": { "id": "shoes_789", "name": "Loafers" }
+      },
+      "validation": {
+        "validation_score": 0.87,
+        "accepted": true
+      },
+      "collage": "data:image/png;base64,iVBORw0KGgoAAA..."
+    }
+  ],
+  "original_prompt": "Minimal summer outfit for casual office wear",
+  "translated_prompt": "Minimal summer outfit for casual office wear"
+}
+```
+
+The response includes:
+
+* Recommended outfit items
+* Validation score and acceptance result
+* A Base64-encoded collage image ready for frontend rendering
+
+---
+
+## Summary
+
+* MCP Tool Server handles **all heavy logic**
+* FastAPI acts as a **unified API gateway**
+* Tool-based design ensures:
+
+  * Clean separation of concerns
+  * Easier debugging and testing
+  * Scalable future extensions
 
 ---
 
