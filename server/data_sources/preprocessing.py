@@ -1,7 +1,6 @@
 import pickle
 import pandas as pd
 
-'''
 # ---------------------------------------------------------
 # 1) Load raw pickle
 # ---------------------------------------------------------
@@ -51,7 +50,7 @@ def refine_style(df: pd.DataFrame) -> pd.DataFrame:
 def filter_items(df: pd.DataFrame) -> pd.DataFrame:
     df = df.copy()
 
-    remove_types = ["accessory", "acc", "set", "pack"]
+    remove_types = [ "acc", "set", "pack"]
     df = df[~df["product_type"].isin(remove_types)]
     df = df[df["product_type"] != "unknown"]
 
@@ -116,4 +115,4 @@ def run_pipeline(
 
 if __name__ == "__main__":
     run_pipeline()
-'''
+

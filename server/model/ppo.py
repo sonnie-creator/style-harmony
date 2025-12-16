@@ -8,8 +8,7 @@ from stable_baselines3.common.vec_env import DummyVecEnv
 from stable_baselines3.common.callbacks import BaseCallback
 from tqdm import tqdm
 import json
-from env.env_outfit_train import OutfitCompositionEnv, EncoderWrapper, ValidationAgent
-from user.user_logs import UserLogManager  # ✅ 사용자 로그
+from env.env_outfit_train import OutfitCompositionEnv, EncoderWrapper, ValidationAgent, UserLogManager  # ✅ 사용자 로그
 from datasets import load_dataset
 from stable_baselines3.common.vec_env import VecNormalize
 import wandb
@@ -91,10 +90,10 @@ print(f"✅ Loaded {len(prompts)} prompts")
 # 사용자 로그 및 Validation 초기화
 # ===================================
 print("📥 Loading user logs and validation agent...")
-log_manager = UserLogManager(log_file="user_logs.json")
+log_manager = UserLogManager()
 
 # 데이터셋 로드 (Validation용)
-with open("./data_sources/product_embeddings_dict_accessory_final.pkl", "rb") as f:
+with open("./data_sources/fashion_products.pkl", "rb") as f:
     full_dataset = pickle.load(f)
 if isinstance(full_dataset, list):
     full_dataset = {item["id"]: item for item in full_dataset}
@@ -243,7 +242,7 @@ enc = EncoderWrapper(device=device)
 
 def make_env():
     env = OutfitCompositionEnv(
-        "./data_sources/product_embeddings_dict_accessory_final.pkl", 
+        "./data_sources/fashion_products.pkl", 
         encoder=enc, 
         top_k=40
     )

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { User, Sparkles, Heart, ThumbsDown, ShoppingBag, CheckCircle, AlertCircle } from 'lucide-react';
 
-const API_BASE = 'http://localhost:8002';
+const API_BASE = 'http://localhost:8000';
 
 const OutfitRecommendationUI = () => {
   const [userId, setUserId] = useState('');
@@ -14,7 +14,10 @@ const OutfitRecommendationUI = () => {
   const [loading, setLoading] = useState(false);
   const [results, setResults] = useState(null);
   const [toast, setToast] = useState('');
-  
+  const [currentStep, setCurrentStep] = useState('');
+  const [progress, setProgress] = useState(0);
+  const [stepInfo, setStepInfo] = useState(null);
+
   const [serverStatus, setServerStatus] = useState(null);
   const [statusLoading, setStatusLoading] = useState(true);
 
@@ -43,6 +46,125 @@ const OutfitRecommendationUI = () => {
     return () => clearInterval(interval);
   }, []);
 
+  const sendFeedback = async (outfitId, feedbackType, outfitItems) => {
+    try {
+      // ⭐ outfit_items를 백엔드가 원하는 형식으로 정리
+      const cleanItems = {};
+      
+      if (outfitItems && typeof outfitItems === 'object') {
+        for (const [category, item] of Object.entries(outfitItems)) {
+          if (item && typeof item === 'object') {
+            cleanItems[category] = {
+              id: String(item.id || ''),
+              name: String(item.name || ''),
+              style: String(item.style || ''),
+              color: String(item.color || '')
+            };
+          }
+        }
+      }
+      
+      const payload = {
+        outfit_id: String(outfitId || ''),
+        feedback_type: String(feedbackType),
+        outfit_items: cleanItems,
+        prompt: String(prompt || ''),
+      };
+      
+      // user_id가 있을 때만 추가
+      if (userId && userId.trim()) {
+        payload.user_id = String(userId.trim());
+      }
+      
+      // metadata는 선택적
+      payload.metadata = {
+        gender: String(gender || ''),
+        age: String(age || ''),
+        personalColor: String(personalColor || ''),
+        season: String(season || '')
+      };
+  
+      console.log('📤 전송 데이터:', JSON.stringify(payload, null, 2));
+  
+      const response = await fetch(`${API_BASE}/feedback`, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify(payload)
+      });
+  
+      console.log('📥 응답 상태:', response.status, response.statusText);
+  
+      if (!response.ok) {
+        const contentType = response.headers.get('content-type');
+        let errorMessage = '피드백 저장 실패';
+        
+        if (contentType && contentType.includes('application/json')) {
+          const errorData = await response.json();
+          console.error('❌ 에러 데이터:', errorData);
+          
+          // FastAPI validation 에러 파싱
+          if (errorData.detail) {
+            if (Array.isArray(errorData.detail)) {
+              // Pydantic validation errors
+              const errors = errorData.detail.map(e => {
+                const field = e.loc.slice(1).join('.');
+                return `${field}: ${e.msg}`;
+              });
+              errorMessage = errors.join('\n');
+            } else if (typeof errorData.detail === 'string') {
+              errorMessage = errorData.detail;
+            }
+          }
+        } else {
+          const errorText = await response.text();
+          console.error('❌ 텍스트 에러:', errorText);
+          errorMessage = `HTTP ${response.status}: ${errorText.substring(0, 100)}`;
+        }
+        
+        throw new Error(errorMessage);
+      }
+  
+      const result = await response.json();
+      console.log('✅ 성공 응답:', result);
+      
+      if (result.status === "skipped" || result.is_anonymous) {
+        showToast(
+          feedbackType === 'like' 
+            ? '💡 사용자 ID를 입력하면 취향이 저장됩니다' 
+            : '💡 사용자 ID를 입력하면 피드백이 저장됩니다'
+        );
+      } else {
+        showToast(
+          feedbackType === 'like' 
+            ? `💖 ${userId}님의 선호 스타일로 저장됨!` 
+            : `📝 ${userId}님의 비선호 스타일로 저장됨!`
+        );
+      }
+      
+    } catch (err) {
+      console.error('=== 피드백 오류 상세 ===');
+      console.error('Error type:', typeof err);
+      console.error('Error:', err);
+      console.error('Error message:', err?.message);
+      console.error('Error stack:', err?.stack);
+      
+      let errorMsg = '알 수 없는 오류가 발생했습니다';
+      
+      if (err instanceof Error) {
+        errorMsg = err.message;
+      } else if (typeof err === 'string') {
+        errorMsg = err;
+      } else if (err && err.toString && err.toString() !== '[object Object]') {
+        errorMsg = err.toString();
+      }
+      
+      showToast(`❌ ${errorMsg}`);
+    }
+  };
+  
   const getRecommendation = async () => {
     if (!prompt.trim()) {
       showToast('스타일을 입력해주세요');
@@ -228,7 +350,8 @@ const OutfitRecommendationUI = () => {
                   fontWeight: '600',
                   textAlign: 'center',
                   letterSpacing: '-0.02em',
-                  transition: 'all 0.3s ease'
+                  transition: 'all 0.3s ease',
+                  color: '#7e22ce'
                 }}
               />
             </div>
@@ -266,7 +389,8 @@ const OutfitRecommendationUI = () => {
                     resize: 'vertical',
                     textAlign: 'left',
                     lineHeight: '1.8',
-                    letterSpacing: '-0.02em'
+                    letterSpacing: '-0.02em',
+                    color: '#7e22ce'
                   }}
                 />
 
@@ -285,7 +409,8 @@ const OutfitRecommendationUI = () => {
                       fontSize: '1.125rem',
                       fontWeight: '600',
                       textAlign: 'center',
-                      letterSpacing: '-0.02em'
+                      letterSpacing: '-0.02em',
+                      color: '#7e22ce'
                     }}
                   >
                     <option value="All">전체</option>
@@ -312,7 +437,8 @@ const OutfitRecommendationUI = () => {
                         fontSize: '1.125rem',
                         fontWeight: '600',
                         textAlign: 'center',
-                        letterSpacing: '-0.02em'
+                        letterSpacing: '-0.02em',
+                        color: '#7e22ce'
                       }}
                     />
                   </div>
@@ -332,7 +458,8 @@ const OutfitRecommendationUI = () => {
                         fontSize: '1.125rem',
                         fontWeight: '600',
                         textAlign: 'center',
-                        letterSpacing: '-0.02em'
+                        letterSpacing: '-0.02em',
+                        color: '#7e22ce'
                       }}
                     >
                       <option value="">선택</option>
@@ -361,32 +488,44 @@ const OutfitRecommendationUI = () => {
                       fontSize: '1.125rem',
                       fontWeight: '600',
                       textAlign: 'center',
-                      letterSpacing: '-0.02em'
+                      letterSpacing: '-0.02em',
+                      color: '#7e22ce'
                     }}
                   />
                 </div>
 
-                <button
-                  onClick={getRecommendation}
-                  disabled={loading}
-                  style={{
-                    width: '100%',
-                    padding: '1.25rem 2rem',
-                    borderRadius: '1rem',
-                    border: 'none',
-                    fontWeight: 'bold',
-                    fontSize: '1.25rem',
-                    color: 'white',
-                    background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
-                    boxShadow: '0 8px 25px rgba(168, 85, 247, 0.3)',
-                    cursor: loading ? 'not-allowed' : 'pointer',
-                    opacity: loading ? 0.6 : 1,
-                    letterSpacing: '-0.02em',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  {loading ? '✨ 추천 중...' : '✨ 추천 받기'}
-                </button>
+       <div>
+  <button
+    onClick={getRecommendation}
+    disabled={loading}
+    style={{
+      width: '100%',
+      padding: '1.25rem 2rem',
+      borderRadius: '1rem',
+      border: 'none',
+      fontWeight: 'bold',
+      fontSize: '1.25rem',
+      color: 'white',
+      background: 'linear-gradient(135deg, #c084fc 0%, #a855f7 100%)',
+      boxShadow: '0 8px 25px rgba(168, 85, 247, 0.3)',
+      cursor: loading ? 'not-allowed' : 'pointer',
+      opacity: loading ? 0.6 : 1,
+      letterSpacing: '-0.02em',
+      transition: 'all 0.3s ease'
+    }}
+  >
+    {loading
+      ? `✨ ${currentStep || "진행 중..."}`
+      : '✨ 추천 받기'}
+  </button>
+  {loading && (
+    <div style={{marginTop: '0.5rem', fontSize: '0.9rem', color: '#555'}}>
+      {currentStep && <div>단계: {currentStep}</div>}
+      {stepInfo && <pre>{JSON.stringify(stepInfo, null, 2)}</pre>}
+    </div>
+  )}
+</div>
+
 
               </div>
             </div>
@@ -581,48 +720,84 @@ const OutfitRecommendationUI = () => {
 
                         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: window.innerWidth < 768 ? 'center' : 'flex-start', gap: '1.5rem' }}>
                           <button
-                            onClick={() => showToast('👍 좋아요!')}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.75rem',
-                              padding: '1rem 1.75rem',
-                              background: '#fce7f3',
-                              color: '#9f1239',
-                              borderRadius: '1rem',
-                              border: '3px solid #fbcfe8',
-                              fontWeight: 'bold',
-                              fontSize: '1.125rem',
-                              cursor: 'pointer',
-                              letterSpacing: '-0.02em',
-                              transition: 'all 0.3s ease'
-                            }}
+                            onClick={() => sendFeedback(
+                      outfit.outfit_id,
+                      'like',
+                      outfit.items
+                    )}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '1rem 1.75rem',
+                      background: '#fce7f3',
+                      color: '#9f1239',
+                      borderRadius: '1rem',
+                      border: '3px solid #fbcfe8',
+                      fontWeight: 'bold',
+                      fontSize: '1.125rem',
+                      cursor: 'pointer',
+                      letterSpacing: '-0.02em',
+                      transition: 'all 0.3s ease'
+                    }}
                           >
                             <Heart style={{ width: '1.25rem', height: '1.25rem' }} />
                             <span>좋아요</span>
                           </button>
                           <button
-                            onClick={() => showToast('👎 피드백 저장됨')}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '0.75rem',
-                              padding: '1rem 1.75rem',
-                              background: '#f3f4f6',
-                              color: '#374151',
-                              borderRadius: '1rem',
-                              border: '3px solid #d1d5db',
-                              fontWeight: 'bold',
-                              fontSize: '1.125rem',
-                              cursor: 'pointer',
-                              letterSpacing: '-0.02em',
-                              transition: 'all 0.3s ease'
-                            }}
-                          >
+                    onClick={() => sendFeedback(
+                      outfit.outfit_id,
+                      'dislike',
+                      outfit.items
+                    )}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '0.75rem',
+                      padding: '1rem 1.75rem',
+                      background: '#f3f4f6',
+                      color: '#374151',
+                      borderRadius: '1rem',
+                      border: '3px solid #d1d5db',
+                      fontWeight: 'bold',
+                      fontSize: '1.125rem',
+                      cursor: 'pointer',
+                      letterSpacing: '-0.02em',
+                      transition: 'all 0.3s ease'
+                    }}
+                    >
                             <ThumbsDown style={{ width: '1.25rem', height: '1.25rem' }} />
                             <span>싫어요</span>
                           </button>
                         </div>
+                 {/* ⭐ 안내 메시지 */}
+                 {!userId ? (
+                  <p style={{
+                    color: '#f59e0b',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    padding: '0.75rem',
+                    background: '#fffbeb',
+                    borderRadius: '0.5rem',
+                    border: '2px solid #fde047'
+                  }}>
+                    💡 사용자 ID를 입력하면 취향을 기억하고 개인화 추천을 제공합니다
+                  </p>
+                ) : (
+                  <p style={{
+                    color: '#059669',
+                    fontSize: '0.875rem',
+                    fontWeight: '600',
+                    textAlign: 'center',
+                    padding: '0.75rem',
+                    background: '#d1fae5',
+                    borderRadius: '0.5rem',
+                    border: '2px solid #86efac'
+                  }}>
+                    ✅ {userId}님의 취향으로 저장됩니다
+                  </p>
+                )}
                       </div>
                     </div>
                   </div>

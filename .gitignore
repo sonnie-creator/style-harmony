@@ -12,7 +12,6 @@ __pycache__/
 *.pyc
 *.pyo
 *.pyd
-env/
 venv/
 .venv/
 .env
@@ -43,7 +42,7 @@ fashion-ui/.cache/
 *.bmp
 data/
 datasets/
-server/data_sources/
+
 
 # --- OS / Editor ---
 .DS_Store
