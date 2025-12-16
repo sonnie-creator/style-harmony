@@ -60,18 +60,14 @@ pip install -r requirements.txt
 
 
 ```bash
-cd project/server
+cd style-harmony/server
 uvicorn ui_server:app --host 0.0.0.0 --port 8002
 ```
 
 * **MCP server connected** → MCP mode
 ---
-### 2. UI 
-```bash
-cd project/fashion-ui
-npm run dev
-```
-### 3. API Request Example
+
+### 2. API Request Example
 
 ```bash
 curl -X POST "http://127.0.0.1:8002/recommend" \
@@ -120,7 +116,7 @@ A custom Gymnasium environment is used for sequential outfit composition, where 
 The MCP layer handles prompt analysis, validation, and collage generation around the PPO-based core model. Models are available at: [Sonnie108/ppo-fashion-harmony](https://huggingface.co/Sonnie108/ppo-fashion-harmony)
 
    * MCP Tool-based pipeline
-
+---
 ### Collage Generation
 
    * Background removal
