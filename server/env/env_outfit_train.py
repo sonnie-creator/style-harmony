@@ -99,7 +99,6 @@ class OutfitCompositionEnv(gym.Env):
         if isinstance(self.dataset, list):
             self.dataset = {item["article_id"]: item for item in self.dataset}
 
-# 🔥 모든 key를 문자열로 강제 변환 (KeyError 해결 핵심)
         self.dataset = {str(k): v for k, v in self.dataset.items()}
         self.encoder = encoder or EncoderWrapper(device=self.device)
 
