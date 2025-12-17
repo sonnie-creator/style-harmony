@@ -19,7 +19,6 @@ with open("./data_sources/fashion_products.pkl", "rb") as f:
 if isinstance(dataset, list):
     dataset = {item["product_code"]: item for item in dataset}
 
-# ⭐ 모든 키를 문자열로 변환 (env와 일관성 유지)
 dataset = {str(k): v for k, v in dataset.items()}
 print(f"✅ Dataset loaded: {len(dataset)} items")
 
