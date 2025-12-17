@@ -219,7 +219,6 @@ class MCPToolServer:
                 for folder in hf_folders:
                     hf_file_path = f"{folder}/{img_file}"
                     try:
-                        # ⭐ hf_hub_download는 원본 경로 구조를 유지하므로
                         # local_dir_use_symlinks=False로 실제 파일 복사
                         downloaded_path = hf_hub_download(
                             repo_id=repo_id,
@@ -229,7 +228,7 @@ class MCPToolServer:
                             local_dir_use_symlinks=False
                         )
                         
-                        # ⭐ 다운로드된 파일을 루트로 이동
+
                         # downloaded_path는 ./server/data_sources/images/images_part1/xxx.jpg
                         if os.path.exists(downloaded_path) and downloaded_path != local_path:
                             import shutil
